@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Bar, BarChart, Line, LineChart, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
 import {
   Zap,
@@ -58,7 +57,7 @@ export function MetricsDisplay({
   onDeleteHistoryItem = () => {},
 }: MetricsDisplayProps) {
   const hasHistory = history.length > 0
-  const hasRealMetrics = !!metrics && hasHistory;
+  const hasRealMetrics = !!metrics && hasHistory
 
   // State for chart data points limit
   const [chartDataPoints, setChartDataPoints] = useState<number>(10)
@@ -78,9 +77,9 @@ export function MetricsDisplay({
   const duration = hasRealMetrics ? metrics.duration : 0.1
   const originalSize = hasRealMetrics ? metrics.originalSize : 0
   const resultSize = hasRealMetrics ? metrics.resultSize : 0
-  const bitrate = originalSize / (duration / 1e3);
-  let speed = hasRealMetrics ? metrics.speed : 0;
-  if (!isFinite(speed)) speed = bitrate / 1024 / 1024;
+  const bitrate = originalSize / (duration / 1e3)
+  let speed = hasRealMetrics ? metrics.speed : 0
+  if (!isFinite(speed)) speed = bitrate / 1024 / 1024
 
   // Calculate percentage saved/increased
   const percentChange = hasRealMetrics
@@ -129,14 +128,14 @@ export function MetricsDisplay({
       size: resultSize / 1024,
       fill: "hsl(var(--chart-2))",
     },
-  ]);
+  ])
   const efficiencyData = filteredHistory.map(({ ratio, mode }) => [
     {
       name: "Efficiency",
       efficiency: ratio * 100,
       fill: "hsl(var(--chart-3))",
     },
-  ]);
+  ])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage)
@@ -187,25 +186,37 @@ export function MetricsDisplay({
   // Custom tooltip content for the historical performance chart
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload
+      // Get the data from the payload
+      // Each line in the chart has its own entry in the payload array
+      const dataPoint = payload[0].payload
+
+      // Find the ratio and speed values from the specific payload items
+      const ratioItem = payload.find((p) => p.dataKey === "ratio")
+      const speedItem = payload.find((p) => p.dataKey === "speed")
+
+      const ratio = ratioItem ? ratioItem.value : null
+      const speed = speedItem ? speedItem.value : null
+
       return (
         <div className="bg-background border rounded-md p-3 shadow-md">
           <p className="font-medium">{label}</p>
           <p className="text-xs text-muted-foreground mb-1">
-            {data.fileName} ({data.mode})
+            {dataPoint.fileName || "Unknown"} ({dataPoint.mode || "unknown"})
           </p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1">
             <p className="text-xs">
-              Version: <span className="font-medium">v{data.version}</span>
+              Version: <span className="font-medium">v{dataPoint.version || "?"}</span>
             </p>
             <p className="text-xs">
-              Ratio: <span className="font-medium">{data.ratio?.toFixed(2) ?? 0}x</span>
+              Ratio: <span className="font-medium">{ratio !== null && !isNaN(ratio) ? ratio.toFixed(2) : "?"}x</span>
             </p>
             <p className="text-xs">
-              Speed: <span className="font-medium">{data.speed?.toFixed(2) ?? 0} MB/s</span>
+              Speed:{" "}
+              <span className="font-medium">{speed !== null && !isNaN(speed) ? speed.toFixed(2) : "?"} MB/s</span>
             </p>
             <p className="text-xs">
-              Size: <span className="font-medium">{formatBytes(data.originalSize)}</span>
+              Size:{" "}
+              <span className="font-medium">{dataPoint.originalSize ? formatBytes(dataPoint.originalSize) : "?"}</span>
             </p>
           </div>
         </div>
@@ -253,9 +264,7 @@ export function MetricsDisplay({
           </div>
         </CardHeader>
         <CardContent
-          className={cn(
-            hasRealMetrics ? "" : "opacity-30 pointer-events-none max-h-[600px] overflow-hidden",
-          )}
+          className={cn(hasRealMetrics ? "" : "opacity-30 pointer-events-none max-h-[600px] overflow-hidden")}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <Card>
@@ -289,7 +298,9 @@ export function MetricsDisplay({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Input Size</p>
-                  <p className="text-2xl font-bold">{hasRealMetrics && originalSize ? formatBytes(originalSize) : "—"}</p>
+                  <p className="text-2xl font-bold">
+                    {hasRealMetrics && originalSize ? formatBytes(originalSize) : "—"}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -314,7 +325,7 @@ export function MetricsDisplay({
                 <TabsTrigger value="details">Details</TabsTrigger>
                 <TabsTrigger value="history">
                   History
-                  {(filteredHistory?.length > 0) && <span className="ml-1 text-xs">({filteredHistory.length})</span>}
+                  {filteredHistory?.length > 0 && <span className="ml-1 text-xs">({filteredHistory.length})</span>}
                 </TabsTrigger>
               </TabsList>
 
@@ -422,9 +433,9 @@ export function MetricsDisplay({
                     <Select
                       value={itemsPerPage.toString()}
                       onValueChange={(value) => {
-                        setItemsPerPage(Number.parseInt(value));
+                        setItemsPerPage(Number.parseInt(value))
                         // Reset to first page when changing items per page
-                        setCurrentPage(1);
+                        setCurrentPage(1)
                       }}
                     >
                       <SelectTrigger className="h-8 w-[120px]">
@@ -468,7 +479,6 @@ export function MetricsDisplay({
 
             <TabsContent value="charts" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                 {/* Historical Performance Chart */}
                 <Card className="md:col-span-2">
                   <CardHeader className="pb-2">
@@ -523,7 +533,42 @@ export function MetricsDisplay({
                           <XAxis dataKey="version" />
                           <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" />
                           <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" />
-                          <Tooltip content={<CustomTooltip />} />
+                          <Tooltip
+                            content={({ active, payload, label }) => {
+                              if (active && payload && payload.length) {
+                                const avgRatioItem = payload.find((p) => p.dataKey === "avgRatio")
+                                const avgSpeedItem = payload.find((p) => p.dataKey === "avgSpeed")
+
+                                const avgRatio = avgRatioItem ? avgRatioItem.value : null
+                                const avgSpeed = avgSpeedItem ? avgSpeedItem.value : null
+
+                                return (
+                                  <div className="bg-background border rounded-md p-3 shadow-md">
+                                    <p className="font-medium">Version {label}</p>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
+                                      <p className="text-xs">
+                                        Avg. Ratio:{" "}
+                                        <span className="font-medium">
+                                          {avgRatio !== null && !isNaN(avgRatio) ? avgRatio.toFixed(2) : "?"}x
+                                        </span>
+                                      </p>
+                                      <p className="text-xs">
+                                        Avg. Speed:{" "}
+                                        <span className="font-medium">
+                                          {avgSpeed !== null && !isNaN(avgSpeed) ? avgSpeed.toFixed(2) : "?"} MB/s
+                                        </span>
+                                      </p>
+                                      <p className="text-xs">
+                                        Sample Count:{" "}
+                                        <span className="font-medium">{payload[0].payload.count || 0}</span>
+                                      </p>
+                                    </div>
+                                  </div>
+                                )
+                              }
+                              return null
+                            }}
+                          />
                           <Legend />
                           <Bar yAxisId="left" dataKey="avgRatio" name="Avg. Ratio" fill="hsl(var(--chart-1))" />
                           <Bar yAxisId="right" dataKey="avgSpeed" name="Avg. Speed (MB/s)" fill="hsl(var(--chart-2))" />
