@@ -6,7 +6,7 @@
  * Minimum duration in milliseconds to prevent division by zero
  * in speed calculations and avoid infinity values
  */
-export const MIN_DURATION_MS = 0.1;
+export const MIN_DURATION_MS = 0.001;
 
 /**
  * Maximum speed limit in MB/s to prevent unrealistic display values
