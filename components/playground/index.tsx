@@ -279,7 +279,7 @@ export function Playground() {
       newMetrics.speed = dataSizeMB / (newMetrics.duration / 1000)
 
       // Ensure speed is finite and reasonable
-      if (!isFinite(newMetrics.speed) || newMetrics.speed > 10000) {
+      if (!isFinite(newMetrics.speed) || newMetrics.speed > MAX_SPEED_CAP_MBPS) {
         newMetrics.speed = 0
       }
 
