@@ -244,19 +244,25 @@ export function Playground() {
         const arrayBuffer = await uploadedFile.arrayBuffer()
         data = new Uint8Array(arrayBuffer)
         originalSize = data.length
-      } else if (isBase64 && currentMode === "decompress") {
-        // If we're decompressing and the input is base64, decode it first
-        try {
-          data = decodeBase64(currentInputData)
-          originalSize = data.length
-        } catch (e) {
-          throw new Error("Invalid base64 data. Please provide valid base64-encoded compressed data.")
-        }
       } else {
-        // Convert text to Uint8Array
-        const encoder = new TextEncoder()
-        data = encoder.encode(currentInputData)
-        originalSize = data.length
+        // For text input, we need to determine if it's base64 or not
+        // Check if we're in decompress mode and the data looks like base64
+        const shouldTreatAsBase64 = currentMode === "decompress" && isBase64
+
+        if (shouldTreatAsBase64) {
+          // If we're decompressing and the input is marked as base64, decode it first
+          try {
+            data = decodeBase64(currentInputData)
+            originalSize = data.length
+          } catch (e) {
+            throw new Error("Invalid base64 data. Please provide valid base64-encoded compressed data.")
+          }
+        } else {
+          // Convert text to Uint8Array
+          const encoder = new TextEncoder()
+          data = encoder.encode(currentInputData)
+          originalSize = data.length
+        }
       }
 
       const cfg = { mode: currentMode, version: currentVersion }
@@ -280,19 +286,19 @@ export function Playground() {
       if (currentMode === "compress") {
         const base64Result = encodeBase64(result)
         setOutputData(base64Result)
-        setIsBase64(true)
+        // Don't modify the input isBase64 state here - only set output state if needed
       } else {
         // For decompressed data, try to show as text if possible
         try {
           const decoder = new TextDecoder("utf-8", { fatal: true })
           const textResult = decoder.decode(result)
           setOutputData(textResult)
-          setIsBase64(false)
+          // Don't modify the input isBase64 state here
         } catch (e) {
           // If decoding fails, show as base64
           const base64Result = encodeBase64(result)
           setOutputData(base64Result)
-          setIsBase64(true)
+          // Don't modify the input isBase64 state here
         }
       }
 
@@ -383,6 +389,18 @@ export function Playground() {
     setOutputBinary(null)
     setError(null)
     setLastProcessedTime(null)
+
+    // When switching to decompress mode, if we have compressed output data,
+    // move it to input and mark it as base64
+    if (newMode === "decompress" && outputData && mode === "compress") {
+      setInputData(outputData)
+      setIsBase64(true)
+      setInputType("text")
+      setUploadedFile(null)
+    } else if (newMode === "compress") {
+      // When switching to compress mode, clear the base64 flag
+      setIsBase64(false)
+    }
 
     // Update filename extension based on the new mode
     if (fileName) {
