@@ -8,6 +8,7 @@
     "lint": "next lint",
     "start": "next start"
   },
+  "type": "module",
   "dependencies": {
     "@hookform/resolvers": "^5.2.0",
     "@radix-ui/react-accordion": "1.2.11",
@@ -63,6 +64,7 @@
     "zod": "^4.0.10"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "^24.1.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
