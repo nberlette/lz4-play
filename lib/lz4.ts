@@ -1,6 +1,7 @@
 "use client"
 
 import type { CompressionResult } from "@/lib/types"
+import { MAX_SPEED_MBPS } from "@/lib/constants"
 
 interface LZ4Module {
   compress(data: Uint8Array): Uint8Array
@@ -95,8 +96,8 @@ export async function run(
   const dataSizeMB = originalSize / (1024 * 1024)
   let speed = dataSizeMB / (duration / 1000)
 
-  // Ensure speed is finite and reasonable (cap at 10GB/s which is unrealistic but prevents display issues)
-  if (!isFinite(speed) || speed > 10000) {
+  // Ensure speed is finite and reasonable
+  if (!isFinite(speed) || speed > MAX_SPEED_MBPS) {
     speed = 0
   }
 
