@@ -271,7 +271,7 @@ export function Playground() {
 
       // Ensure duration is never 0 to avoid Infinity in speed calculations
       if (newMetrics.duration === 0) {
-        newMetrics.duration = 0.001 // Set minimum duration to 0.001ms
+        newMetrics.duration = MIN_DURATION_MS; // Set minimum duration
       }
 
       // Recalculate speed with the corrected duration
