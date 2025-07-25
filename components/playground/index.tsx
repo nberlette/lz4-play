@@ -269,6 +269,20 @@ export function Playground() {
       const response = await run(data, cfg)
       const { result, version, metrics: newMetrics } = response
 
+      // Ensure duration is never 0 to avoid Infinity in speed calculations
+      if (newMetrics.duration === 0) {
+        newMetrics.duration = 0.001 // Set minimum duration to 0.001ms
+      }
+
+      // Recalculate speed with the corrected duration
+      const dataSizeMB = newMetrics.originalSize / (1024 * 1024)
+      newMetrics.speed = dataSizeMB / (newMetrics.duration / 1000)
+
+      // Ensure speed is finite and reasonable
+      if (!isFinite(newMetrics.speed) || newMetrics.speed > 10000) {
+        newMetrics.speed = 0
+      }
+
       // Store the binary result for download
       setOutputBinary(result.slice())
 

@@ -76,8 +76,8 @@ export async function run(
   const duration = endTime - startTime
 
   // Calculate metrics
-  const originalSize = data.length;
-  const resultSize = result.length;
+  const originalSize = data.length
+  const resultSize = result.length
 
   let ratio = 0
   if (mode === "compress") {
@@ -93,7 +93,12 @@ export async function run(
 
   // Calculate speed in MB/s
   const dataSizeMB = originalSize / (1024 * 1024)
-  const speed = dataSizeMB / (duration / 1e3)
+  let speed = dataSizeMB / (duration / 1000)
+
+  // Ensure speed is finite and reasonable (cap at 10GB/s which is unrealistic but prevents display issues)
+  if (!isFinite(speed) || speed > 10000) {
+    speed = 0
+  }
 
   return {
     mode,
