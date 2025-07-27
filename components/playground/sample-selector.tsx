@@ -1,21 +1,26 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { FileText } from "lucide-react"
-import { samples } from "@/lib/sample-data"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
+import { samples } from "@/lib/sample-data";
+import { useState } from "react";
 
 interface SampleSelectorProps {
-  onSelectSample: (sampleId: string) => void
-  mode: string
+  onSelectSample: (sampleId: string) => void;
+  mode: string;
 }
 
 export function SampleSelector({ onSelectSample, mode }: SampleSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="relative">
-      <Button variant="outline" size="sm" onClick={() => setIsOpen(!isOpen)} className="relative">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative"
+      >
         <FileText className="mr-1 h-3 w-3" />
         <span className="text-xs">Sample Data</span>
       </Button>
@@ -33,13 +38,15 @@ export function SampleSelector({ onSelectSample, mode }: SampleSelectorProps) {
                   key={sample.id}
                   className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-accent hover:text-accent-foreground"
                   onClick={() => {
-                    onSelectSample(sample.id)
-                    setIsOpen(false)
+                    onSelectSample(sample.id);
+                    setIsOpen(false);
                   }}
                 >
                   <div>
                     <div className="font-medium">{sample.name}</div>
-                    <div className="text-xs text-muted-foreground">{sample.description}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {sample.description}
+                    </div>
                   </div>
                 </button>
               ))}
@@ -48,7 +55,12 @@ export function SampleSelector({ onSelectSample, mode }: SampleSelectorProps) {
         </div>
       )}
 
-      {isOpen && <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
     </div>
-  )
+  );
 }

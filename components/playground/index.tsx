@@ -1,103 +1,116 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { InputSection } from "@/components/playground/input-section"
-import { OutputSection } from "@/components/playground/output-section"
-import { MetricsDisplay } from "@/components/playground/metrics-display"
-import { Footer } from "@/components/playground/footer"
-import { fetchVersions } from "@/lib/version-fetcher"
-import run from "@/lib/lz4"
-import { useLocalStorage } from "@/hooks/use-local-storage"
-import type { CompressionHistory, ProcessingConfig, PerformanceMetrics } from "@/lib/types"
-import { encodeBase64, decodeBase64 } from "@/lib/binary-utils"
-import { getSampleById } from "@/lib/sample-data"
-import { parseShareableLink } from "@/lib/share-utils"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
-import { MIN_DURATION_MS, MAX_SPEED_MBPS } from "@/lib/constants"
+import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { InputSection } from "@/components/playground/input-section";
+import { OutputSection } from "@/components/playground/output-section";
+import { MetricsDisplay } from "@/components/playground/metrics-display";
+import { Footer } from "@/components/playground/footer";
+import { fetchVersions, type VersionInfo } from "@/lib/version-fetcher";
+import run from "@/lib/lz4";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import type {
+  CompressionHistory,
+  Mode,
+  PerformanceMetrics,
+  ProcessingConfig,
+} from "@/lib/types";
+import { decodeBase64, encodeBase64 } from "@/lib/binary-utils";
+import { getSampleById } from "@/lib/sample-data";
+import { parseShareableLink } from "@/lib/share-utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { MAX_SPEED_MBPS, MIN_DURATION_MS } from "@/lib/constants";
+
+// deno-lint-ignore ban-types
+type strings = string & {};
 
 export function Playground() {
   // Get search params for shareable links - moved to useEffect to avoid the Suspense error
-  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null)
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(
+    null,
+  );
 
   // State for versions
-  const [availableVersions, setAvailableVersions] = useState([])
-  const [isLoadingVersions, setIsLoadingVersions] = useState(true)
+  const [availableVersions, setAvailableVersions] = useState<VersionInfo[]>([]);
+  const [isLoadingVersions, setIsLoadingVersions] = useState(true);
 
   // State for input/output
-  const [inputData, setInputData] = useState("")
-  const [outputData, setOutputData] = useState("")
-  const [outputBinary, setOutputBinary] = useState<Uint8Array | null>(null)
-  const [uploadedFile, setUploadedFile] = useState(null)
-  const [inputType, setInputType] = useState("text")
-  const [fileName, setFileName] = useState<string | null>(null)
-  const [isBase64, setIsBase64] = useState(false)
+  const [inputData, setInputData] = useState("");
+  const [outputData, setOutputData] = useState("");
+  const [outputBinary, setOutputBinary] = useState<Uint8Array | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [inputType, setInputType] = useState<"file" | "text" | strings>("text");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [isBase64, setIsBase64] = useState(false);
 
   // State for processing
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null)
-  const [mode, setMode] = useState("compress")
-  const [error, setError] = useState<string | null>(null)
-  const [lastProcessedTime, setLastProcessedTime] = useState<number | null>(null)
-  const [shareError, setShareError] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
+  const [mode, setMode] = useState<Mode | strings>("compress");
+  const [error, setError] = useState<string | null>(null);
+  const [lastProcessedTime, setLastProcessedTime] = useState<number | null>(
+    null,
+  );
+  const [shareError, setShareError] = useState<string | null>(null);
 
   // Configuration state - simplified to just version
   const [config, setConfig] = useState<ProcessingConfig>({
     version: "",
-  })
+  });
 
   // History state with localStorage persistence - no limit on entries
-  const [compressionHistory, setCompressionHistory] = useLocalStorage<CompressionHistory[]>(
-    "lz4-compression-history",
-    [],
-  )
+  const [compressionHistory, setCompressionHistory] = useLocalStorage<
+    CompressionHistory[]
+  >("lz4-compression-history", []);
 
   // Persist metrics in localStorage
-  const [persistedMetrics, setPersistedMetrics] = useLocalStorage<PerformanceMetrics | null>("lz4-last-metrics", null)
+  const [persistedMetrics, setPersistedMetrics] = useLocalStorage<
+    PerformanceMetrics | null
+  >("lz4-last-metrics", null);
 
   // Use persisted metrics if no current metrics
   useEffect(() => {
     if (!metrics && persistedMetrics) {
-      setMetrics(persistedMetrics)
+      setMetrics(persistedMetrics);
     }
-  }, [metrics, persistedMetrics])
+  }, [metrics, persistedMetrics]);
 
   // Get search params safely on the client side
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setSearchParams(new URLSearchParams(window.location.search))
+      setSearchParams(new URLSearchParams(globalThis.location.search));
     }
-  }, [])
+  }, []);
 
   // Fetch available versions on component mount
   useEffect(() => {
     const getVersions = async () => {
-      setIsLoadingVersions(true)
+      setIsLoadingVersions(true);
       try {
-        const versions = await fetchVersions()
-        setAvailableVersions(versions)
+        const versions = await fetchVersions();
+        setAvailableVersions(versions);
         // Set default version to latest
         if (versions.length > 0) {
-          setConfig({ version: versions[0].version })
+          setConfig({ version: versions[0].version });
         }
       } catch (error) {
-        console.error("Failed to fetch versions:", error)
+        console.error("Failed to fetch versions:", error);
       } finally {
-        setIsLoadingVersions(false)
+        setIsLoadingVersions(false);
       }
-    }
+    };
 
-    getVersions()
-  }, [])
+    getVersions();
+  }, []);
 
   // Handle shareable links
   useEffect(() => {
     const handleShareableLink = async () => {
-      if (!searchParams) return
+      if (!searchParams) return;
 
-      const stateParam = searchParams.get("state")
-      if (!stateParam) return
+      const stateParam = searchParams.get("state");
+      if (!stateParam) return;
 
       try {
         // Parse the state from the URL
@@ -109,96 +122,110 @@ export function Playground() {
           outputData: sharedOutputData,
           timestamp: sharedTimestamp,
           isDataMissing,
-        } = parseShareableLink(window.location.href)
+        } = parseShareableLink(globalThis.location.href);
 
         // If data is missing, show an error
         if (isDataMissing) {
-          setShareError("This shared link doesn't include the actual data, only the configuration.")
-          return
+          setShareError(
+            "This shared link doesn't include the actual data, only the configuration.",
+          );
+          return;
         }
 
         // Update the state with the shared data
-        if (sharedInputData) setInputData(sharedInputData)
-        if (sharedMode) setMode(sharedMode)
-        if (sharedVersion) setConfig({ version: sharedVersion })
-        if (sharedFileName) setFileName(sharedFileName)
-        if (sharedOutputData) setOutputData(sharedOutputData)
-        if (sharedTimestamp) setLastProcessedTime(sharedTimestamp)
+        if (sharedInputData) setInputData(sharedInputData);
+        if (sharedMode) setMode(sharedMode);
+        if (sharedVersion) setConfig({ version: sharedVersion });
+        if (sharedFileName) setFileName(sharedFileName);
+        if (sharedOutputData) setOutputData(sharedOutputData);
+        if (sharedTimestamp) setLastProcessedTime(sharedTimestamp);
 
         // Set input type to text
-        setInputType("text")
-        setUploadedFile(null)
+        setInputType("text");
+        setUploadedFile(null);
 
         // If we have output data, set isBase64 based on mode
-        if (sharedOutputData) {
-          setIsBase64(sharedMode === "compress")
-        }
+        if (sharedOutputData) setIsBase64(sharedMode === "compress");
 
         // If we have all the necessary data, we can try to process it
         if (sharedInputData && sharedVersion && !sharedOutputData) {
           // Process the data
-          await handleProcess(sharedInputData, sharedMode, sharedVersion, sharedFileName)
+          await handleProcess(
+            sharedInputData,
+            sharedMode,
+            sharedVersion,
+            sharedFileName,
+          );
         }
       } catch (error) {
-        console.error("Error handling shareable link:", error)
-        setShareError("Failed to load the shared compression data. The link might be invalid or corrupted.")
+        console.error("Error handling shareable link:", error);
+        setShareError(
+          "Failed to load the shared compression data. The link might be invalid or corrupted.",
+        );
       }
-    }
+    };
 
     if (searchParams && searchParams.has("state")) {
-      handleShareableLink()
+      handleShareableLink();
     }
-  }, [searchParams])
+  }, [searchParams]);
 
-  const handleFileUpload = (file) => {
-    if (file === uploadedFile) return // Prevent unnecessary updates
-    setInputType(file ? "file" : "text")
+  const handleFileUpload = (file: File | null | undefined) => {
+    if (file === uploadedFile) return; // Prevent unnecessary updates
+    setInputType(file ? "file" : "text");
     if (file) {
-      setUploadedFile(file)
-      setFileName(file.name)
+      setUploadedFile(file);
+      setFileName(file.name);
 
       // Read file content for preview
-      file.text().then(setInputData)
-      setIsBase64(false)
+      file.text().then(setInputData);
+      setIsBase64(false);
     } else {
-      setUploadedFile(null)
-      setFileName(null)
-      setInputData("")
-      setIsBase64(false)
+      setUploadedFile(null);
+      setFileName(null);
+      setInputData("");
+      setIsBase64(false);
     }
-  }
+  };
 
   // Function to update filename in history
-  const updateHistoryFilename = (oldName: string | null, newName: string | null) => {
-    if (oldName === newName) return
+  const updateHistoryFilename = (
+    oldName: string | null,
+    newName: string | null,
+  ) => {
+    if (oldName === newName) return;
 
     setCompressionHistory((prevHistory) => {
       // Find the most recent entry with the matching filename and timestamp
-      const updatedHistory = [...prevHistory]
+      const updatedHistory = [...prevHistory];
 
       // If we have a lastProcessedTime, use that to find the exact entry
       if (lastProcessedTime) {
-        const index = updatedHistory.findIndex((item) => item.timestamp === lastProcessedTime)
+        const index = updatedHistory.findIndex((item) =>
+          item.timestamp === lastProcessedTime
+        );
         if (index !== -1) {
           updatedHistory[index] = {
             ...updatedHistory[index],
             fileName: newName,
-          }
+          };
         }
       } else {
         // Fallback: update the most recent entry with the matching filename
-        const index = updatedHistory.findIndex((item) => item.fileName === oldName)
+        const index = updatedHistory.findIndex((item) =>
+          item.fileName === oldName
+        );
         if (index !== -1) {
           updatedHistory[index] = {
             ...updatedHistory[index],
             fileName: newName,
-          }
+          };
         }
       }
 
-      return updatedHistory
-    })
-  }
+      return updatedHistory;
+    });
+  };
 
   const handleProcess = async (
     customInputData?: string,
@@ -206,69 +233,74 @@ export function Playground() {
     customVersion?: string,
     customFileName?: string | null,
   ) => {
-    setIsProcessing(true)
-    setMetrics(null)
-    setOutputBinary(null)
-    setError(null)
-    setShareError(null)
+    setIsProcessing(true);
+    setMetrics(null);
+    setOutputBinary(null);
+    setError(null);
+    setShareError(null);
 
     try {
-      let data: Uint8Array
-      let originalSize: number
+      let data: Uint8Array;
+      let originalSize: number;
 
       // Use custom values if provided, otherwise use state values
-      const currentInputData = customInputData || inputData
-      const currentMode = customMode || mode
-      const currentVersion = customVersion || config.version
+      const currentInputData = customInputData || inputData;
+      const currentMode: "compress" | "decompress" | strings = customMode ||
+        mode;
+      const currentVersion = customVersion || config.version;
 
       // Determine the filename to use
-      let currentFileName: string
+      let currentFileName: string;
 
       if (customFileName) {
-        currentFileName = customFileName
+        currentFileName = customFileName;
       } else if (inputType === "file" && uploadedFile) {
         // For file uploads, use the file's name
-        currentFileName = uploadedFile.name
+        currentFileName = uploadedFile.name;
       } else {
         // For text input, use the custom filename or a default
         if (fileName && fileName.trim() !== "") {
-          currentFileName = fileName
+          currentFileName = fileName;
         } else {
           // Generate a default filename based on mode
-          const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
-          currentFileName = currentMode === "compress" ? `untitled-${timestamp}.txt` : `compressed-${timestamp}.lz4`
+          const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+          currentFileName = currentMode === "compress"
+            ? `untitled-${timestamp}.txt`
+            : `compressed-${timestamp}.lz4`;
         }
       }
 
       if (inputType === "file" && uploadedFile) {
         // Read file as ArrayBuffer
-        const arrayBuffer = await uploadedFile.arrayBuffer()
-        data = new Uint8Array(arrayBuffer)
-        originalSize = data.length
+        const arrayBuffer = await uploadedFile.arrayBuffer();
+        data = new Uint8Array(arrayBuffer);
+        originalSize = data.length;
       } else {
         // For text input, we need to determine if it's base64 or not
         // Check if we're in decompress mode and the data looks like base64
-        const shouldTreatAsBase64 = currentMode === "decompress" && isBase64
+        const shouldTreatAsBase64 = currentMode === "decompress" && isBase64;
 
         if (shouldTreatAsBase64) {
           // If we're decompressing and the input is marked as base64, decode it first
           try {
-            data = decodeBase64(currentInputData)
-            originalSize = data.length
-          } catch (e) {
-            throw new Error("Invalid base64 data. Please provide valid base64-encoded compressed data.")
+            data = decodeBase64(currentInputData);
+            originalSize = data.length;
+          } catch {
+            throw new Error(
+              "Invalid base64 data. Please provide valid base64-encoded compressed data.",
+            );
           }
         } else {
           // Convert text to Uint8Array
-          const encoder = new TextEncoder()
-          data = encoder.encode(currentInputData)
-          originalSize = data.length
+          const encoder = new TextEncoder();
+          data = encoder.encode(currentInputData);
+          originalSize = data.length;
         }
       }
 
-      const cfg = { mode: currentMode, version: currentVersion }
-      const response = await run(data, cfg)
-      const { result, version, metrics: newMetrics } = response
+      const cfg = { mode: currentMode, version: currentVersion };
+      const response = await run(data, cfg);
+      const { result, version, metrics: newMetrics } = response;
 
       // Ensure duration is never 0 to avoid Infinity in speed calculations
       if (newMetrics.duration === 0) {
@@ -276,177 +308,176 @@ export function Playground() {
       }
 
       // Recalculate speed with the corrected duration
-      const dataSizeMB = newMetrics.originalSize / (1024 * 1024)
-      newMetrics.speed = dataSizeMB / (newMetrics.duration / 1000)
+      const dataSizeMB = originalSize / (1024 * 1024);
+      newMetrics.speed = dataSizeMB / (newMetrics.duration / 1000);
 
       // Ensure speed is finite and reasonable
       if (!isFinite(newMetrics.speed) || newMetrics.speed > MAX_SPEED_MBPS) {
-        newMetrics.speed = 0
+        newMetrics.speed = 0;
       }
 
       // Store the binary result for download
-      setOutputBinary(result.slice())
+      setOutputBinary(result.slice());
 
       // Update filename based on mode if needed
       if (currentMode === "compress" && !currentFileName.endsWith(".lz4")) {
-        currentFileName = `${currentFileName}.lz4`
-      } else if (currentMode === "decompress" && currentFileName.endsWith(".lz4")) {
-        currentFileName = currentFileName.slice(0, -4)
+        currentFileName = `${currentFileName}.lz4`;
+      } else if (
+        currentMode === "decompress" && currentFileName.endsWith(".lz4")
+      ) {
+        currentFileName = currentFileName.slice(0, -4);
       }
 
       // Update the filename state
-      setFileName(currentFileName)
+      setFileName(currentFileName);
 
       // For compressed data, show base64 representation
       if (currentMode === "compress") {
-        const base64Result = encodeBase64(result)
-        setOutputData(base64Result)
-        // Don't modify the input isBase64 state here - only set output state if needed
+        const base64Result = encodeBase64(result);
+        setOutputData(base64Result);
       } else {
-        // For decompressed data, try to show as text if possible
         try {
-          const decoder = new TextDecoder("utf-8", { fatal: true })
-          const textResult = decoder.decode(result)
-          setOutputData(textResult)
-          // Don't modify the input isBase64 state here
-        } catch (e) {
-          // If decoding fails, show as base64
-          const base64Result = encodeBase64(result)
-          setOutputData(base64Result)
-          // Don't modify the input isBase64 state here
+          const decoder = new TextDecoder("utf-8", { fatal: true });
+          const textResult = decoder.decode(result);
+          setOutputData(textResult);
+        } catch {
+          const base64Result = encodeBase64(result);
+          setOutputData(base64Result);
         }
       }
 
-      // Save result to history - no limit on entries
-      const timestamp = Date.now()
-      setLastProcessedTime(timestamp) // Store the timestamp for later reference
+      const timestamp = Date.now();
+      setLastProcessedTime(timestamp);
 
       const compressionResult: CompressionHistory = {
+        ...newMetrics,
         timestamp,
         mode: currentMode,
         version,
         fileName: currentFileName,
-        ...newMetrics,
-      }
+      };
 
       // Add to history without limiting the number of entries
-      setCompressionHistory((prev) => [compressionResult, ...prev])
+      setCompressionHistory((prev) => [compressionResult, ...prev]);
 
       // Update and persist metrics
-      setMetrics(newMetrics)
-      setPersistedMetrics(newMetrics)
+      setMetrics(newMetrics);
+      setPersistedMetrics(newMetrics);
     } catch (error) {
-      console.error("Processing error:", error)
-      setError(error.message || "An unknown error occurred")
-      setOutputData("")
+      console.error("Processing error:", error);
+      setError((error as Error)?.message || "An unknown error occurred");
+      setOutputData("");
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   // Handle sample data selection with on-the-fly compression
   const handleSampleData = async (sampleId: string) => {
-    const sample = getSampleById(sampleId)
-    if (!sample) return
+    const sample = getSampleById(sampleId);
+    if (!sample) return;
 
     // Set the filename from the sample
-    setFileName(sample.fileName)
+    setFileName(sample.fileName);
 
     if (mode === "compress") {
       // In compress mode, just load the raw sample
-      setInputData(sample.data)
-      setInputType("text")
-      setUploadedFile(null)
-      setIsBase64(false)
+      setInputData(sample.data);
+      setInputType("text");
+      setUploadedFile(null);
+      setIsBase64(false);
     } else {
       // In decompress mode, compress the sample on the fly
       try {
-        setIsProcessing(true)
+        setIsProcessing(true);
 
         // Convert sample text to Uint8Array
-        const encoder = new TextEncoder()
-        const data = encoder.encode(sample.data)
+        const encoder = new TextEncoder();
+        const data = encoder.encode(sample.data);
 
         // Compress the data using the current version
-        const response = await run(data, { mode: "compress", version: config.version })
+        const response = await run(data, {
+          mode: "compress",
+          version: config.version,
+        });
 
         // Convert the compressed data to base64
-        const base64Result = encodeBase64(response.result)
+        const base64Result = encodeBase64(response.result);
 
         // Update the input with the compressed data
-        setInputData(base64Result)
-        setInputType("text")
-        setUploadedFile(null)
-        setIsBase64(true)
+        setInputData(base64Result);
+        setInputType("text");
+        setUploadedFile(null);
+        setIsBase64(true);
 
         // Update filename to add .lz4 extension if it doesn't already have it
         if (!sample.fileName.endsWith(".lz4")) {
-          setFileName(`${sample.fileName}.lz4`)
+          setFileName(`${sample.fileName}.lz4`);
         }
       } catch (error) {
-        console.error("Error compressing sample:", error)
+        console.error("Error compressing sample:", error);
         // If compression fails, just load the raw sample
-        setInputData(sample.data)
-        setInputType("text")
-        setUploadedFile(null)
-        setIsBase64(false)
+        setInputData(sample.data);
+        setInputType("text");
+        setUploadedFile(null);
+        setIsBase64(false);
       } finally {
-        setIsProcessing(false)
+        setIsProcessing(false);
       }
     }
-  }
+  };
 
   const toggleMode = () => {
-    const newMode = mode === "compress" ? "decompress" : "compress"
-    setMode(newMode)
+    const newMode = mode === "compress" ? "decompress" : "compress";
+    setMode(newMode);
     // Clear previous results when switching modes
-    setOutputData("")
-    setOutputBinary(null)
-    setError(null)
-    setLastProcessedTime(null)
+    setOutputData("");
+    setOutputBinary(null);
+    setError(null);
+    setLastProcessedTime(null);
 
     // When switching to decompress mode, if we have compressed output data,
     // move it to input and mark it as base64
     if (newMode === "decompress" && outputData && mode === "compress") {
-      setInputData(outputData)
-      setIsBase64(true)
-      setInputType("text")
-      setUploadedFile(null)
+      setInputData(outputData);
+      setIsBase64(true);
+      setInputType("text");
+      setUploadedFile(null);
     } else if (newMode === "compress") {
       // When switching to compress mode, clear the base64 flag
-      setIsBase64(false)
+      setIsBase64(false);
     }
 
     // Update filename extension based on the new mode
     if (fileName) {
       if (newMode === "compress" && fileName.endsWith(".lz4")) {
-        setFileName(fileName.slice(0, -4))
+        setFileName(fileName.slice(0, -4));
       } else if (newMode === "decompress" && !fileName.endsWith(".lz4")) {
-        setFileName(`${fileName}.lz4`)
+        setFileName(`${fileName}.lz4`);
       }
     }
-  }
+  };
 
   const refreshVersions = async () => {
-    setIsLoadingVersions(true)
+    setIsLoadingVersions(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      const versions = await fetchVersions(true) // Force refresh
-      setAvailableVersions(versions)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const versions = await fetchVersions(true); // Force refresh
+      setAvailableVersions(versions);
     } catch (error) {
-      console.error("Failed to refresh versions:", error)
+      console.error("Failed to refresh versions:", error);
     } finally {
-      setIsLoadingVersions(false)
+      setIsLoadingVersions(false);
     }
-  }
+  };
 
   const clearHistory = () => {
-    setCompressionHistory([])
-  }
+    setCompressionHistory([]);
+  };
 
   const deleteHistoryItem = (index: number) => {
-    setCompressionHistory((prev) => prev.filter((_, i) => i !== index))
-  }
+    setCompressionHistory((prev) => prev.filter((_, i) => i !== index));
+  };
 
   return (
     <div className="container mx-auto max-w-7xl min-h-screen flex flex-col">
@@ -455,7 +486,8 @@ export function Playground() {
           <div className="w-full">
             <h1 className="flex justify-center">
               <a
-                href={"https://jsr.io/@nick/lz4" + (config.version ? "@" + config.version : "") + "/doc"}
+                href={"https://jsr.io/@nick/lz4" +
+                  (config.version ? "@" + config.version : "") + "/doc"}
                 target="_blank"
                 title="@nick/lz4"
                 rel="noreferrer noopener nofollow"
@@ -471,7 +503,11 @@ export function Playground() {
                   aria-hidden="true"
                 >
                   <rect width="100%" height="100%" fill="#2878D7" rx="33" />
-                  <g fill="#fff" filter="url(#a)" transform="translate(16 16) scale(0.9)">
+                  <g
+                    fill="#fff"
+                    filter="url(#a)"
+                    transform="translate(16 16) scale(0.9)"
+                  >
                     <path d="m45.636 159.766-.26 83h60.498999999999995v-26h-34v-140H45.898zM119.875 89.247v12.478l20.395.271 20.395.27-6.436 16.5c-3.54 9.075-7.04 17.85-7.778 19.5s-5.023 12.675-9.523 24.5-11.078 28.661-14.618 37.413l-6.435 15.913v26.674h76v-26h-24.5c-13.475 0-24.5-.172-24.5-.383 0-.21 2.078-5.498 4.618-11.75s9.71-24.417 15.933-40.367 14.492-37.1 18.376-47l7.061-18 .006-11.25.006-11.25h-69z" />
                     <path
                       fillRule="evenodd"
@@ -498,31 +534,43 @@ export function Playground() {
                       <feOffset dx="4" dy="5" />
                       <feComposite in2="hardAlpha" operator="out" />
                       <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0" />
-                      <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_53_8" />
-                      <feBlend in="SourceGraphic" in2="effect1_dropShadow_53_8" result="shape" />
+                      <feBlend
+                        in2="BackgroundImageFix"
+                        result="effect1_dropShadow_53_8"
+                      />
+                      <feBlend
+                        in="SourceGraphic"
+                        in2="effect1_dropShadow_53_8"
+                        result="shape"
+                      />
                     </filter>
                   </defs>
                 </svg>
-                <span className="sr-only hidden" hidden="">
+                <span className="sr-only hidden" hidden>
                   @nick/lz4
                 </span>
               </a>
             </h1>
             <h2 className="text-center text-muted-foreground mb-4">
               Compression playground for the{" "}
-              <a href="https://jsr.io/@nick/lz4" target="_blank" rel="noopener noreferrer" className="underline">
+              <a
+                href={"https://jsr.io/@nick/lz4" + (config.version ? "@" + config.version : "") + "/doc"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
                 <code>@nick/lz4</code>
               </a>{" "}
               open-source JavaScript package.
             </h2>
           </div>
-          <div className="fixed top-4 right-4 z-[99999] group">
-            <ThemeToggle className="shadow-md group-hover:shadow-xl transition-all duration-300 ease-in" />
+          <div className="fixed top-4 right-4 z-[1000] group">
+            <ThemeToggle className="shadow-md group-hover:shadow-xl transition-all duration-300 ease-in !z-[2000]" />
           </div>
         </div>
 
         {shareError && (
-          <Alert variant="warning" className="mb-6">
+          <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Shared Link Warning</AlertTitle>
             <AlertDescription>{shareError}</AlertDescription>
@@ -543,7 +591,7 @@ export function Playground() {
             packageVersion={config.version}
             setPackageVersion={(version) => {
               if (version !== config.version) {
-                setConfig({ ...config, version })
+                setConfig({ ...config, version });
               }
             }}
             availableVersions={availableVersions}
@@ -572,7 +620,7 @@ export function Playground() {
         <div className="col-span-1 md:col-span-2">
           <MetricsDisplay
             metrics={metrics}
-            mode={mode}
+            mode={mode as Mode}
             history={compressionHistory}
             onClearHistory={clearHistory}
             onDeleteHistoryItem={deleteHistoryItem}
@@ -582,5 +630,5 @@ export function Playground() {
 
       <Footer />
     </div>
-  )
+  );
 }

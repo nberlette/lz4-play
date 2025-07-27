@@ -1,11 +1,11 @@
 // Sample data for demonstration
 export interface SampleData {
-  id: string
-  name: string
-  description: string
-  data: string // raw data
-  fileName: string
-  type: "text" | "json" | "binary" | "html" | "csv"
+  id: string;
+  name: string;
+  description: string;
+  data: string; // raw data
+  fileName: string;
+  type: "text" | "json" | "binary" | "html" | "csv";
 }
 
 // Raw samples for compression/decompression
@@ -14,7 +14,8 @@ export const samples: SampleData[] = [
     id: "lorem-ipsum",
     name: "Lorem Ipsum Text",
     description: "A sample of Lorem Ipsum text",
-    data: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, 
+    data:
+      `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, 
 nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, 
 eget aliquam nisl nisl eget nisl. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies tincidunt, 
 nisl nisl aliquam nisl, eget aliquam nisl nisl eget nisl. Nullam auctor, nisl eget ultricies tincidunt, nisl nisl aliquam nisl, 
@@ -118,9 +119,9 @@ eget aliquam nisl nisl eget nisl.`.repeat(10),
     fileName: "sample.html",
     type: "html",
   },
-]
+];
 
 // Get a sample by ID
 export function getSampleById(id: string): SampleData | undefined {
-  return samples.find((sample) => sample.id === id)
+  return samples.find((sample) => sample.id === id);
 }
