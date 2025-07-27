@@ -15,6 +15,7 @@ import { getSampleById } from "@/lib/sample-data"
 import { parseShareableLink } from "@/lib/share-utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { MIN_DURATION_MS, MAX_SPEED_MBPS } from "@/lib/constants"
 
 export function Playground() {
   // Get search params for shareable links - moved to useEffect to avoid the Suspense error
@@ -279,7 +280,7 @@ export function Playground() {
       newMetrics.speed = dataSizeMB / (newMetrics.duration / 1000)
 
       // Ensure speed is finite and reasonable
-      if (!isFinite(newMetrics.speed) || newMetrics.speed > MAX_SPEED_CAP_MBPS) {
+      if (!isFinite(newMetrics.speed) || newMetrics.speed > MAX_SPEED_MBPS) {
         newMetrics.speed = 0
       }
 

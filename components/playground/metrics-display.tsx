@@ -38,6 +38,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { MIN_DURATION_MS } from "@/lib/constants"
 
 interface MetricsDisplayProps {
   metrics: PerformanceMetrics | null
@@ -74,7 +75,7 @@ export function MetricsDisplay({
 
   // Calculate metrics values or use placeholders
   const ratio = hasRealMetrics ? metrics.ratio : 0
-  const duration = hasRealMetrics ? metrics.duration : 0.1
+  const duration = hasRealMetrics ? metrics.duration : MIN_DURATION_MS
   const originalSize = hasRealMetrics ? metrics.originalSize : 0
   const resultSize = hasRealMetrics ? metrics.resultSize : 0
   const bitrate = originalSize / (duration / 1e3)
