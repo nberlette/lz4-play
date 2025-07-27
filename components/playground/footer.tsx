@@ -1,9 +1,9 @@
-import { Github, Package, Shield } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import { Github, Package, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export function Footer() {
-  const currentYear = new Date().getFullYear()
+  const currentYear = new Date().getFullYear();
 
   return (
     <footer className="mt-12 mb-8 border-t pt-6">
@@ -34,19 +34,42 @@ export function Footer() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" asChild className="gap-2 transition-colors duration-500">
-              <a href="https://github.com/nberlette/lz4-wasm#readme" target="_blank" rel="noopener noreferrer">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-2 transition-colors duration-500"
+            >
+              <a
+                href="https://github.com/nberlette/lz4-wasm#readme"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Github className="h-4 w-4" />
                 <span>GitHub</span>
               </a>
             </Button>
-            <Button variant="ghost" size="sm" asChild className="gap-2 transition-colors duration-500">
-              <a href="https://jsr.io/@nick/lz4" target="_blank" rel="noopener noreferrer">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-2 transition-colors duration-500"
+            >
+              <a
+                href="https://jsr.io/@nick/lz4"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Package className="h-4 w-4" />
                 <span>JSR</span>
               </a>
             </Button>
-            <Button variant="ghost" size="sm" asChild className="gap-2 transition-colors duration-500">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-2 transition-colors duration-500"
+            >
               <Link href="/privacy">
                 <Shield className="h-4 w-4" />
                 <span>Privacy</span>
@@ -58,7 +81,11 @@ export function Footer() {
         <div className="my-8 text-xs text-center text-muted-foreground opacity-75 italic">
           <p>
             Not affiliated with nor endorsed by the official{" "}
-            <a href="https://github.com/lz4/lz4" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://github.com/lz4/lz4"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               LZ4
             </a>{" "}
             project, a trademark of{" "}
@@ -73,7 +100,8 @@ export function Footer() {
             .
           </p>
           <p className="mt-2">
-            <strong>100% client-side processing</strong> - your data never leaves your browser.{" "}
+            <strong>100% client-side processing</strong>{" "}
+            - your data never leaves your browser.{" "}
             <Link href="/privacy" className="underline">
               Learn more
             </Link>
@@ -81,5 +109,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

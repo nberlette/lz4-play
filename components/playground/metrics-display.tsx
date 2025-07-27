@@ -1,26 +1,42 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Bar, BarChart, Line, LineChart, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react";
 import {
-  Zap,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Bar,
+  BarChart,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowDown,
+  BarChart2,
+  ChevronLeft,
+  ChevronRight,
   FileDown,
   FileUp,
-  BarChart2,
+  Filter,
   History,
   Trash2,
   X,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-  ArrowDown,
-} from "lucide-react"
-import type { CompressionHistory, PerformanceMetrics } from "@/lib/types"
-import { formatDate, formatBytes } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+  Zap,
+} from "lucide-react";
+import type { CompressionHistory, PerformanceMetrics } from "@/lib/types";
+import { formatBytes, formatDate } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,21 +47,32 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { MIN_DURATION_MS } from "@/lib/constants";
 
 interface MetricsDisplayProps {
-  metrics: PerformanceMetrics | null
-  mode?: "compress" | "decompress"
-  history?: CompressionHistory[]
-  className?: string
-  onClearHistory?: () => void
-  onDeleteHistoryItem?: (index: number) => void
+  metrics: PerformanceMetrics | null;
+  mode?: "compress" | "decompress";
+  history?: CompressionHistory[];
+  className?: string;
+  onClearHistory?: () => void;
+  onDeleteHistoryItem?: (index: number) => void;
 }
 
 export function MetricsDisplay({
@@ -56,66 +83,74 @@ export function MetricsDisplay({
   onClearHistory = () => {},
   onDeleteHistoryItem = () => {},
 }: MetricsDisplayProps) {
-  const hasHistory = history.length > 0
-  const hasRealMetrics = !!metrics && hasHistory
+  const hasHistory = history.length > 0;
+  const hasRealMetrics = !!metrics && hasHistory;
 
   // State for chart data points limit
-  const [chartDataPoints, setChartDataPoints] = useState<number>(10)
+  const [chartDataPoints, setChartDataPoints] = useState<number>(10);
 
   // State for history pagination
-  const [currentPage, setCurrentPage] = useState<number>(1)
-  const [itemsPerPage, setItemsPerPage] = useState<number>(10)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
   // State for filtering
-  const [showCompressData, setShowCompressData] = useState<boolean>(true)
-  const [showDecompressData, setShowDecompressData] = useState<boolean>(true)
-  const [versionFilter, setVersionFilter] = useState<string>("all")
-  const [searchTerm, setSearchTerm] = useState<string>("")
+  const [showCompressData, setShowCompressData] = useState<boolean>(true);
+  const [showDecompressData, setShowDecompressData] = useState<boolean>(true);
+  const [versionFilter, setVersionFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   // Calculate metrics values or use placeholders
-  const ratio = hasRealMetrics ? metrics.ratio : 0
-  const duration = hasRealMetrics ? metrics.duration : 0.1
-  const originalSize = hasRealMetrics ? metrics.originalSize : 0
-  const resultSize = hasRealMetrics ? metrics.resultSize : 0
-  const bitrate = originalSize / (duration / 1e3)
-  let speed = hasRealMetrics ? metrics.speed : 0
-  if (!isFinite(speed)) speed = bitrate / 1024 / 1024
+  const ratio = hasRealMetrics ? metrics.ratio : 0;
+  const duration = hasRealMetrics ? metrics.duration : MIN_DURATION_MS;
+  const originalSize = hasRealMetrics ? metrics.originalSize : 0;
+  const resultSize = hasRealMetrics ? metrics.resultSize : 0;
+  const bitrate = originalSize / (duration / 1e3);
+  let speed = hasRealMetrics ? metrics.speed : 0;
+  if (!isFinite(speed)) speed = bitrate / 1024 / 1024;
 
   // Calculate percentage saved/increased
   const percentChange = hasRealMetrics
     ? mode === "compress"
       ? ((originalSize - resultSize) / originalSize) * 100
       : ((resultSize - originalSize) / originalSize) * 100
-    : 0
+    : 0;
 
   const percentChangeFormatted = hasRealMetrics
     ? `${percentChange < 0 ? "-" : "+"}${Math.abs(percentChange).toFixed(2)}%`
-    : "—"
+    : "—";
 
   // Create data for charts based on actual metrics
 
   // Get unique versions from history
-  const uniqueVersions = Array.from(new Set(history.map((item) => item.version)))
+  const uniqueVersions = Array.from(
+    new Set(history.map((item) => item.version)),
+  );
 
   // Filter history data based on user selections
   const filteredHistory = history.filter((item) => {
     // Filter by mode
-    if (!(showCompressData && item.mode === "compress") && !(showDecompressData && item.mode === "decompress")) {
-      return false
+    if (
+      !(showCompressData && item.mode === "compress") &&
+      !(showDecompressData && item.mode === "decompress")
+    ) {
+      return false;
     }
 
     // Filter by version
     if (versionFilter !== "all" && item.version !== versionFilter) {
-      return false
+      return false;
     }
 
     // Filter by search term (filename)
-    if (searchTerm && item.fileName && !item.fileName.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false
+    if (
+      searchTerm && item.fileName &&
+      !item.fileName.toLowerCase().includes(searchTerm.toLowerCase())
+    ) {
+      return false;
     }
 
-    return true
-  })
+    return true;
+  });
 
   const sizeData = filteredHistory.map(({ originalSize, resultSize }) => [
     {
@@ -128,19 +163,22 @@ export function MetricsDisplay({
       size: resultSize / 1024,
       fill: "hsl(var(--chart-2))",
     },
-  ])
+  ]);
   const efficiencyData = filteredHistory.map(({ ratio, mode }) => [
     {
       name: "Efficiency",
       efficiency: ratio * 100,
       fill: "hsl(var(--chart-3))",
     },
-  ])
+  ]);
 
   // Calculate pagination
-  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedHistory = filteredHistory.slice(startIndex, startIndex + itemsPerPage)
+  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedHistory = filteredHistory.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   // Create history data for charts - use all filtered history but limit to chartDataPoints
   const historyChartData = filteredHistory
@@ -156,46 +194,50 @@ export function MetricsDisplay({
       mode: item.mode,
       fileName: item.fileName || "unknown",
     }))
-    .reverse() // Show oldest to newest
+    .reverse(); // Show oldest to newest
 
   // Create data for version comparison chart
   const versionComparisonData = uniqueVersions
     .map((version) => {
-      const versionData = history.filter((item) => item.version === version)
-      const avgRatio =
-        versionData.length > 0 ? versionData.reduce((sum, item) => sum + item.ratio, 0) / versionData.length : 0
-      const avgSpeed =
-        versionData.length > 0 ? versionData.reduce((sum, item) => sum + item.speed, 0) / versionData.length : 0
+      const versionData = history.filter((item) => item.version === version);
+      const avgRatio = versionData.length > 0
+        ? versionData.reduce((sum, item) => sum + item.ratio, 0) /
+          versionData.length
+        : 0;
+      const avgSpeed = versionData.length > 0
+        ? versionData.reduce((sum, item) => sum + item.speed, 0) /
+          versionData.length
+        : 0;
 
       return {
         version,
         avgRatio,
         avgSpeed,
         count: versionData.length,
-      }
+      };
     })
-    .sort((a, b) => a.version.localeCompare(b.version))
+    .sort((a, b) => a.version.localeCompare(b.version));
 
   // Custom tooltip formatter for the historical performance chart
   const historyTooltipFormatter = (value, name, props) => {
-    if (name === "ratio") return [`${value.toFixed(2)}x`, "Ratio"]
-    if (name === "speed") return [`${value.toFixed(2)} MB/s`, "Speed"]
-    return [value, name]
-  }
+    if (name === "ratio") return [`${value.toFixed(2)}x`, "Ratio"];
+    if (name === "speed") return [`${value.toFixed(2)} MB/s`, "Speed"];
+    return [value, name];
+  };
 
   // Custom tooltip content for the historical performance chart
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       // Get the data from the payload
       // Each line in the chart has its own entry in the payload array
-      const dataPoint = payload[0].payload
+      const dataPoint = payload[0].payload;
 
       // Find the ratio and speed values from the specific payload items
-      const ratioItem = payload.find((p) => p.dataKey === "ratio")
-      const speedItem = payload.find((p) => p.dataKey === "speed")
+      const ratioItem = payload.find((p) => p.dataKey === "ratio");
+      const speedItem = payload.find((p) => p.dataKey === "speed");
 
-      const ratio = ratioItem ? ratioItem.value : null
-      const speed = speedItem ? speedItem.value : null
+      const ratio = ratioItem ? ratioItem.value : null;
+      const speed = speedItem ? speedItem.value : null;
 
       return (
         <div className="bg-background border rounded-md p-3 shadow-md">
@@ -205,25 +247,35 @@ export function MetricsDisplay({
           </p>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1">
             <p className="text-xs">
-              Version: <span className="font-medium">v{dataPoint.version || "?"}</span>
+              Version:{" "}
+              <span className="font-medium">v{dataPoint.version || "?"}</span>
             </p>
             <p className="text-xs">
-              Ratio: <span className="font-medium">{ratio !== null && !isNaN(ratio) ? ratio.toFixed(2) : "?"}x</span>
+              Ratio:{" "}
+              <span className="font-medium">
+                {ratio !== null && !isNaN(ratio) ? ratio.toFixed(2) : "?"}x
+              </span>
             </p>
             <p className="text-xs">
               Speed:{" "}
-              <span className="font-medium">{speed !== null && !isNaN(speed) ? speed.toFixed(2) : "?"} MB/s</span>
+              <span className="font-medium">
+                {speed !== null && !isNaN(speed) ? speed.toFixed(2) : "?"} MB/s
+              </span>
             </p>
             <p className="text-xs">
               Size:{" "}
-              <span className="font-medium">{dataPoint.originalSize ? formatBytes(dataPoint.originalSize) : "?"}</span>
+              <span className="font-medium">
+                {dataPoint.originalSize
+                  ? formatBytes(dataPoint.originalSize)
+                  : "?"}
+              </span>
             </p>
           </div>
         </div>
-      )
+      );
     }
-    return null
-  }
+    return null;
+  };
 
   return (
     <Card className={cn("h-full relative", className)}>
@@ -234,9 +286,12 @@ export function MetricsDisplay({
             <div className="mb-4 rounded-full bg-primary/10 p-3">
               <ArrowDown className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="mb-2 text-xl font-semibold">Nothing to see here... yet!</h3>
+            <h3 className="mb-2 text-xl font-semibold">
+              Nothing to see here... yet!
+            </h3>
             <p className="max-w-md text-muted-foreground">
-              Performance data will be available after at least one successful compression or decompression operation.
+              Performance data will be available after at least one successful
+              compression or decompression operation.
             </p>
             <div className="mt-6 flex items-center justify-center">
               <Badge variant="outline" className="text-xs">
@@ -249,22 +304,38 @@ export function MetricsDisplay({
 
       <div className={cn(hasRealMetrics ? "" : "filter blur-[1.5px]")}>
         <CardHeader>
-          <div className={cn("flex justify-between items-center", hasRealMetrics ? "" : "opacity-50")}>
+          <div
+            className={cn(
+              "flex justify-between items-center",
+              hasRealMetrics ? "" : "opacity-50",
+            )}
+          >
             <div>
               <CardTitle>Performance Metrics</CardTitle>
               <CardDescription>
-                {mode === "compress" ? "Compression" : "Decompression"} statistics and benchmarks
+                {mode === "compress" ? "Compression" : "Decompression"}{" "}
+                statistics and benchmarks
               </CardDescription>
             </div>
             {hasRealMetrics && (
-              <Badge variant={percentChange > 50 ? "default" : percentChange > 30 ? "secondary" : "outline"}>
+              <Badge
+                variant={percentChange > 50
+                  ? "default"
+                  : percentChange > 30
+                  ? "secondary"
+                  : "outline"}
+              >
                 {percentChangeFormatted}
               </Badge>
             )}
           </div>
         </CardHeader>
         <CardContent
-          className={cn(hasRealMetrics ? "" : "opacity-30 pointer-events-none max-h-[600px] overflow-hidden")}
+          className={cn(
+            hasRealMetrics
+              ? ""
+              : "opacity-30 pointer-events-none max-h-[600px] overflow-hidden",
+          )}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <Card>
@@ -274,7 +345,9 @@ export function MetricsDisplay({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Efficiency</p>
-                  <p className="text-2xl font-bold">{hasRealMetrics && ratio ? ratio.toFixed(2) : "—"}x</p>
+                  <p className="text-2xl font-bold">
+                    {hasRealMetrics && ratio ? ratio.toFixed(2) : "—"}x
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -286,7 +359,9 @@ export function MetricsDisplay({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Throughput</p>
-                  <p className="text-2xl font-bold">{hasRealMetrics && speed ? speed.toFixed(2) : "—"} MB/s</p>
+                  <p className="text-2xl font-bold">
+                    {hasRealMetrics && speed ? speed.toFixed(2) : "—"} MB/s
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -299,7 +374,9 @@ export function MetricsDisplay({
                 <div>
                   <p className="text-sm text-muted-foreground">Input Size</p>
                   <p className="text-2xl font-bold">
-                    {hasRealMetrics && originalSize ? formatBytes(originalSize) : "—"}
+                    {hasRealMetrics && originalSize
+                      ? formatBytes(originalSize)
+                      : "—"}
                   </p>
                 </div>
               </CardContent>
@@ -312,7 +389,11 @@ export function MetricsDisplay({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Output Size</p>
-                  <p className="text-2xl font-bold">{hasRealMetrics && resultSize ? formatBytes(resultSize) : "—"}</p>
+                  <p className="text-2xl font-bold">
+                    {hasRealMetrics && resultSize
+                      ? formatBytes(resultSize)
+                      : "—"}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -325,7 +406,11 @@ export function MetricsDisplay({
                 <TabsTrigger value="details">Details</TabsTrigger>
                 <TabsTrigger value="history">
                   History
-                  {filteredHistory?.length > 0 && <span className="ml-1 text-xs">({filteredHistory.length})</span>}
+                  {filteredHistory?.length > 0 && (
+                    <span className="ml-1 text-xs">
+                      ({filteredHistory.length})
+                    </span>
+                  )}
                 </TabsTrigger>
               </TabsList>
 
@@ -335,7 +420,8 @@ export function MetricsDisplay({
                   <div className="flex items-center gap-2">
                     <Select
                       value={chartDataPoints.toString()}
-                      onValueChange={(value) => setChartDataPoints(Number.parseInt(value))}
+                      onValueChange={(value) =>
+                        setChartDataPoints(Number.parseInt(value))}
                     >
                       <SelectTrigger className="h-8 w-[120px]">
                         <SelectValue placeholder="Dataset Size" />
@@ -371,7 +457,8 @@ export function MetricsDisplay({
                               <Checkbox
                                 id="filter-compress"
                                 checked={showCompressData}
-                                onCheckedChange={(c) => setShowCompressData(!!c)}
+                                onCheckedChange={(c) =>
+                                  setShowCompressData(!!c)}
                               />
                               <Label htmlFor="filter-compress">Compress</Label>
                             </div>
@@ -379,20 +466,28 @@ export function MetricsDisplay({
                               <Checkbox
                                 id="filter-decompress"
                                 checked={showDecompressData}
-                                onCheckedChange={(c) => setShowDecompressData(!!c)}
+                                onCheckedChange={(c) =>
+                                  setShowDecompressData(!!c)}
                               />
-                              <Label htmlFor="filter-decompress">Decompress</Label>
+                              <Label htmlFor="filter-decompress">
+                                Decompress
+                              </Label>
                             </div>
                           </div>
 
                           <div className="space-y-2">
                             <h5 className="text-sm font-medium">Version</h5>
-                            <Select value={versionFilter} onValueChange={setVersionFilter}>
+                            <Select
+                              value={versionFilter}
+                              onValueChange={setVersionFilter}
+                            >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select version" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="all">All Versions</SelectItem>
+                                <SelectItem value="all">
+                                  All Versions
+                                </SelectItem>
                                 {uniqueVersions.map((v) => (
                                   <SelectItem key={v} value={v}>
                                     v{v}
@@ -403,7 +498,9 @@ export function MetricsDisplay({
                           </div>
 
                           <div className="space-y-2">
-                            <h5 className="text-sm font-medium">Search by Filename</h5>
+                            <h5 className="text-sm font-medium">
+                              Search by Filename
+                            </h5>
                             <Input
                               placeholder="Search..."
                               value={searchTerm}
@@ -416,10 +513,10 @@ export function MetricsDisplay({
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                setShowCompressData(true)
-                                setShowDecompressData(true)
-                                setVersionFilter("all")
-                                setSearchTerm("")
+                                setShowCompressData(true);
+                                setShowDecompressData(true);
+                                setVersionFilter("all");
+                                setSearchTerm("");
                               }}
                             >
                               Reset Filters
@@ -433,9 +530,9 @@ export function MetricsDisplay({
                     <Select
                       value={itemsPerPage.toString()}
                       onValueChange={(value) => {
-                        setItemsPerPage(Number.parseInt(value))
+                        setItemsPerPage(Number.parseInt(value));
                         // Reset to first page when changing items per page
-                        setCurrentPage(1)
+                        setCurrentPage(1);
                       }}
                     >
                       <SelectTrigger className="h-8 w-[120px]">
@@ -464,12 +561,15 @@ export function MetricsDisplay({
                       <AlertDialogHeader>
                         <AlertDialogTitle>Clear History</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to clear your compression history? This action cannot be undone.
+                          Are you sure you want to clear your compression
+                          history? This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={onClearHistory}>Clear History</AlertDialogAction>
+                        <AlertDialogAction onClick={onClearHistory}>
+                          Clear History
+                        </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -482,16 +582,31 @@ export function MetricsDisplay({
                 {/* Historical Performance Chart */}
                 <Card className="md:col-span-2">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Historical Performance</CardTitle>
-                    <CardDescription>Showing {historyChartData.length} most recent operations</CardDescription>
+                    <CardTitle className="text-base">
+                      Historical Performance
+                    </CardTitle>
+                    <CardDescription>
+                      Showing {historyChartData.length} most recent operations
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-[250px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={historyChartData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+                        <LineChart
+                          data={historyChartData}
+                          margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+                        >
                           <XAxis dataKey="time" />
-                          <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-4))" />
-                          <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-5))" />
+                          <YAxis
+                            yAxisId="left"
+                            orientation="left"
+                            stroke="hsl(var(--chart-4))"
+                          />
+                          <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            stroke="hsl(var(--chart-5))"
+                          />
                           <Tooltip content={<CustomTooltip />} />
                           <Legend />
                           <Line
@@ -523,55 +638,96 @@ export function MetricsDisplay({
                 {/* Version Comparison Chart */}
                 <Card className="md:col-span-2">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Version Comparison</CardTitle>
-                    <CardDescription>Average performance metrics across different versions</CardDescription>
+                    <CardTitle className="text-base">
+                      Version Comparison
+                    </CardTitle>
+                    <CardDescription>
+                      Average performance metrics across different versions
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-[250px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={versionComparisonData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                        <BarChart
+                          data={versionComparisonData}
+                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        >
                           <XAxis dataKey="version" />
-                          <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" />
-                          <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" />
+                          <YAxis
+                            yAxisId="left"
+                            orientation="left"
+                            stroke="hsl(var(--chart-1))"
+                          />
+                          <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            stroke="hsl(var(--chart-2))"
+                          />
                           <Tooltip
                             content={({ active, payload, label }) => {
                               if (active && payload && payload.length) {
-                                const avgRatioItem = payload.find((p) => p.dataKey === "avgRatio")
-                                const avgSpeedItem = payload.find((p) => p.dataKey === "avgSpeed")
+                                const avgRatioItem = payload.find((p) =>
+                                  p.dataKey === "avgRatio"
+                                );
+                                const avgSpeedItem = payload.find((p) =>
+                                  p.dataKey === "avgSpeed"
+                                );
 
-                                const avgRatio = avgRatioItem ? avgRatioItem.value : null
-                                const avgSpeed = avgSpeedItem ? avgSpeedItem.value : null
+                                const avgRatio = avgRatioItem
+                                  ? avgRatioItem.value
+                                  : null;
+                                const avgSpeed = avgSpeedItem
+                                  ? avgSpeedItem.value
+                                  : null;
 
                                 return (
                                   <div className="bg-background border rounded-md p-3 shadow-md">
-                                    <p className="font-medium">Version {label}</p>
+                                    <p className="font-medium">
+                                      Version {label}
+                                    </p>
                                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
                                       <p className="text-xs">
                                         Avg. Ratio:{" "}
                                         <span className="font-medium">
-                                          {avgRatio !== null && !isNaN(avgRatio) ? avgRatio.toFixed(2) : "?"}x
+                                          {avgRatio !== null && !isNaN(avgRatio)
+                                            ? avgRatio.toFixed(2)
+                                            : "?"}x
                                         </span>
                                       </p>
                                       <p className="text-xs">
                                         Avg. Speed:{" "}
                                         <span className="font-medium">
-                                          {avgSpeed !== null && !isNaN(avgSpeed) ? avgSpeed.toFixed(2) : "?"} MB/s
+                                          {avgSpeed !== null && !isNaN(avgSpeed)
+                                            ? avgSpeed.toFixed(2)
+                                            : "?"} MB/s
                                         </span>
                                       </p>
                                       <p className="text-xs">
                                         Sample Count:{" "}
-                                        <span className="font-medium">{payload[0].payload.count || 0}</span>
+                                        <span className="font-medium">
+                                          {payload[0].payload.count || 0}
+                                        </span>
                                       </p>
                                     </div>
                                   </div>
-                                )
+                                );
                               }
-                              return null
+                              return null;
                             }}
                           />
                           <Legend />
-                          <Bar yAxisId="left" dataKey="avgRatio" name="Avg. Ratio" fill="hsl(var(--chart-1))" />
-                          <Bar yAxisId="right" dataKey="avgSpeed" name="Avg. Speed (MB/s)" fill="hsl(var(--chart-2))" />
+                          <Bar
+                            yAxisId="left"
+                            dataKey="avgRatio"
+                            name="Avg. Ratio"
+                            fill="hsl(var(--chart-1))"
+                          />
+                          <Bar
+                            yAxisId="right"
+                            dataKey="avgSpeed"
+                            name="Avg. Speed (MB/s)"
+                            fill="hsl(var(--chart-2))"
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -584,7 +740,9 @@ export function MetricsDisplay({
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium mb-2">Compression Details</h3>
+                    <h3 className="text-sm font-medium mb-2">
+                      Compression Details
+                    </h3>
                     <ul className="space-y-2 text-sm">
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">Algorithm</span>
@@ -602,22 +760,42 @@ export function MetricsDisplay({
                   </div>
 
                   <div>
-                    <h3 className="text-sm font-medium mb-2">Performance Metrics</h3>
+                    <h3 className="text-sm font-medium mb-2">
+                      Performance Metrics
+                    </h3>
                     <ul className="space-y-2 text-sm">
                       <li className="flex justify-between">
-                        <span className="text-muted-foreground">Processing Time</span>
-                        <span>{hasRealMetrics && duration ? duration.toFixed(2) : "—"} ms</span>
+                        <span className="text-muted-foreground">
+                          Processing Time
+                        </span>
+                        <span>
+                          {hasRealMetrics && duration
+                            ? duration.toFixed(2)
+                            : "—"} ms
+                        </span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-muted-foreground">Throughput</span>
-                        <span>{hasRealMetrics && speed ? speed.toFixed(2) : "—"} MB/s</span>
+                        <span className="text-muted-foreground">
+                          Throughput
+                        </span>
+                        <span>
+                          {hasRealMetrics && speed ? speed.toFixed(2) : "—"}
+                          {" "}
+                          MB/s
+                        </span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-muted-foreground">Compression Ratio</span>
-                        <span>{hasRealMetrics && ratio ? ratio.toFixed(2) : "—"}x</span>
+                        <span className="text-muted-foreground">
+                          Compression Ratio
+                        </span>
+                        <span>
+                          {hasRealMetrics && ratio ? ratio.toFixed(2) : "—"}x
+                        </span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-muted-foreground">Size Change</span>
+                        <span className="text-muted-foreground">
+                          Size Change
+                        </span>
                         <span>{percentChangeFormatted}</span>
                       </li>
                     </ul>
@@ -627,100 +805,143 @@ export function MetricsDisplay({
             </TabsContent>
 
             <TabsContent value="history">
-              {filteredHistory.length > 0 ? (
-                <>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-2 font-medium">Date</th>
-                          <th className="text-left py-2 font-medium">Mode</th>
-                          <th className="text-left py-2 font-medium">Version</th>
-                          <th className="text-left py-2 font-medium">File</th>
-                          <th className="text-left py-2 font-medium">Original Size</th>
-                          <th className="text-left py-2 font-medium">Result Size</th>
-                          <th className="text-left py-2 font-medium">Ratio</th>
-                          <th className="text-left py-2 font-medium">Speed</th>
-                          {onDeleteHistoryItem && <th className="text-right py-2 font-medium">Actions</th>}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedHistory.map((item, index) => {
-                          const actualIndex = startIndex + index
-                          return (
-                            <tr key={actualIndex} className={index < paginatedHistory.length - 1 ? "border-b" : ""}>
-                              <td className="py-2">{formatDate(new Date(item.timestamp))}</td>
-                              <td className="py-2 capitalize">{item.mode}</td>
-                              <td className="py-2">v{item.version}</td>
-                              <td className="py-2 max-w-[150px] truncate" title={item.fileName || "Unknown"}>
-                                {item.fileName || "Unknown"}
-                              </td>
-                              <td className="py-2">{formatBytes(item.originalSize)}</td>
-                              <td className="py-2">{formatBytes(item.resultSize)}</td>
-                              <td className="py-2">{item.ratio?.toFixed(2)?.concat("x") ?? "--"}</td>
-                              <td className="py-2">{item.speed?.toFixed(2) ?? "--"} MB/s</td>
-                              {onDeleteHistoryItem && (
-                                <td className="py-2 text-right">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => onDeleteHistoryItem(actualIndex)}
-                                    className="h-7 w-7"
-                                    title="Delete this entry"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
+              {filteredHistory.length > 0
+                ? (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left py-2 font-medium">Date</th>
+                            <th className="text-left py-2 font-medium">Mode</th>
+                            <th className="text-left py-2 font-medium">
+                              Version
+                            </th>
+                            <th className="text-left py-2 font-medium">File</th>
+                            <th className="text-left py-2 font-medium">
+                              Original Size
+                            </th>
+                            <th className="text-left py-2 font-medium">
+                              Result Size
+                            </th>
+                            <th className="text-left py-2 font-medium">
+                              Ratio
+                            </th>
+                            <th className="text-left py-2 font-medium">
+                              Speed
+                            </th>
+                            {onDeleteHistoryItem && (
+                              <th className="text-right py-2 font-medium">
+                                Actions
+                              </th>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedHistory.map((item, index) => {
+                            const actualIndex = startIndex + index;
+                            return (
+                              <tr
+                                key={actualIndex}
+                                className={index < paginatedHistory.length - 1
+                                  ? "border-b"
+                                  : ""}
+                              >
+                                <td className="py-2">
+                                  {formatDate(new Date(item.timestamp))}
                                 </td>
-                              )}
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Pagination controls */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="text-sm text-muted-foreground">
-                        Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredHistory.length)} of{" "}
-                        {filteredHistory.length} entries
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                          disabled={currentPage === 1}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <div className="text-sm">
-                          Page {currentPage} of {totalPages}
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                          disabled={currentPage === totalPages}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
+                                <td className="py-2 capitalize">{item.mode}</td>
+                                <td className="py-2">v{item.version}</td>
+                                <td
+                                  className="py-2 max-w-[150px] truncate"
+                                  title={item.fileName || "Unknown"}
+                                >
+                                  {item.fileName || "Unknown"}
+                                </td>
+                                <td className="py-2">
+                                  {formatBytes(item.originalSize)}
+                                </td>
+                                <td className="py-2">
+                                  {formatBytes(item.resultSize)}
+                                </td>
+                                <td className="py-2">
+                                  {item.ratio?.toFixed(2)?.concat("x") ?? "--"}
+                                </td>
+                                <td className="py-2">
+                                  {item.speed?.toFixed(2) ?? "--"} MB/s
+                                </td>
+                                {onDeleteHistoryItem && (
+                                  <td className="py-2 text-right">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() =>
+                                        onDeleteHistoryItem(actualIndex)}
+                                      className="h-7 w-7"
+                                      title="Delete this entry"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </td>
+                                )}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
-                  )}
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                  <History className="h-12 w-12 mb-4 opacity-50" />
-                  <p>No compression history yet</p>
-                  <p className="text-sm">Your compression operations will appear here</p>
-                </div>
-              )}
+
+                    {/* Pagination controls */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="text-sm text-muted-foreground">
+                          Showing {startIndex + 1}-{Math.min(
+                            startIndex + itemsPerPage,
+                            filteredHistory.length,
+                          )} of {filteredHistory.length} entries
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                              setCurrentPage((prev) => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <div className="text-sm">
+                            Page {currentPage} of {totalPages}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                              setCurrentPage((prev) =>
+                                Math.min(totalPages, prev + 1)
+                              )}
+                            disabled={currentPage === totalPages}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )
+                : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                    <History className="h-12 w-12 mb-4 opacity-50" />
+                    <p>No compression history yet</p>
+                    <p className="text-sm">
+                      Your compression operations will appear here
+                    </p>
+                  </div>
+                )}
             </TabsContent>
           </Tabs>
         </CardContent>
       </div>
     </Card>
-  )
+  );
 }

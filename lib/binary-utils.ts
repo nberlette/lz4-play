@@ -23,11 +23,11 @@ export function decodeBase64(base64: string): Uint8Array {
 export function isLikelyBase64(str: string): boolean {
   // Base64 strings are typically multiples of 4 characters
   // and only contain A-Z, a-z, 0-9, +, /, and = (for padding)
-  const base64Regex = /^[A-Za-z0-9+/_-]*={0,2}$/
+  const base64Regex = /^[A-Za-z0-9+/_-]*={0,2}$/;
 
   // Check if the string matches the base64 pattern and is a multiple of 4 in length
   // (or has proper padding to make it a multiple of 4)
-  return base64Regex.test(str) && str.length % 4 === 0
+  return base64Regex.test(str) && str.length % 4 === 0;
 }
 
 /**
@@ -35,17 +35,17 @@ export function isLikelyBase64(str: string): boolean {
  */
 export function isBinaryData(data: Uint8Array): boolean {
   // Check a sample of the data for non-text characters
-  const sampleSize = Math.min(1000, data.length)
-  let nonTextChars = 0
+  const sampleSize = Math.min(1000, data.length);
+  let nonTextChars = 0;
 
   for (let i = 0; i < sampleSize; i++) {
-    const byte = data[i]
+    const byte = data[i];
     // Consider bytes outside printable ASCII range as binary
     if (byte < 32 || byte > 126) {
-      nonTextChars++
+      nonTextChars++;
     }
   }
 
   // If more than 10% of the sample is non-text, consider it binary
-  return nonTextChars / sampleSize > 0.1
+  return nonTextChars / sampleSize > 0.1;
 }

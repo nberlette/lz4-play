@@ -1,5 +1,5 @@
-import { Suspense } from "react"
-import { Playground } from "@/components/playground"
+import { Suspense } from "react";
+import { Playground } from "@/components/playground";
 
 export default function Home() {
   return (
@@ -8,7 +8,7 @@ export default function Home() {
         <Playground />
       </Suspense>
     </main>
-  )
+  );
 }
 
 // Simple skeleton loader for the playground
@@ -27,5 +27,5 @@ function PlaygroundSkeleton() {
 
       <div className="h-[400px] bg-card border rounded-lg animate-pulse" />
     </div>
-  )
+  );
 }

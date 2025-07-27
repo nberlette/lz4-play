@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "@/": "./"
+  },
+  "unstable": ["sloppy-imports", "node-globals"],
+  "lint": {
+    "rules": {
+      "exclude": ["no-sloppy-imports"]
+    }
+  }
+}
