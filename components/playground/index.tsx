@@ -554,7 +554,8 @@ export function Playground() {
             <h2 className="text-center text-muted-foreground mb-4">
               Compression playground for the{" "}
               <a
-                href={"https://jsr.io/@nick/lz4" + (config.version ? "@" + config.version : "") + "/doc"}
+                href={"https://jsr.io/@nick/lz4" +
+                  (config.version ? "@" + config.version : "") + "/doc"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline"
