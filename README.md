@@ -1,31 +1,22 @@
-# LZ4 playground demo
+# [LZ4 Playground](https://lz4-play.vercel.app)
 
-_Automatically synced with your [v0.dev](https://v0.dev) deployments_
+This is an tiny interactive playground app for testing out the [@nick/lz4] package without leaving your browser.
+It's 100% client-side, meaning that none of the data is transferred to any server whatsoever - everything runs
+in the client's browser, and the metrics data is persisted locally with the `localStorage` API. 
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/canbus/lz4-play)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/VEvtXhk1BnS)
+The playground allows you to compress/decompress data either by "uploading" a file or simply pasting it in as text,
+using any of the published versions of the package. The speed, throughput, and compression ratio are logged for each
+run, and displayed in a visual aggregation area underneath the main input/output area. It also supports charting the
+performance differences from version to version of the package.
 
-## Overview
+---
 
-This repository will stay in sync with your deployed chats on
-[v0.dev](https://v0.dev). Any changes you make to your deployed app will be
-automatically pushed to this repository from [v0.dev](https://v0.dev).
+**Copyright © [Nicholas Berlette]. All rights reserved. [MIT License].**
 
-## Deployment
+_Not affiliated with the [official LZ4 project] by [Yann Collet]._
 
-Your project is live at:
-
-**[https://vercel.com/canbus/lz4-play](https://vercel.com/canbus/lz4-play)**
-
-## Build your app
-
-Continue building your app on:
-
-**[https://v0.dev/chat/projects/VEvtXhk1BnS](https://v0.dev/chat/projects/VEvtXhk1BnS)**
-
-## How It Works
-
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+[@nick/lz4]: https://github.com/nberlette/lz4#readme
+[MIT License]: https://nick.mit-license.org
+[Nicholas Berlette]: https://github.com/nberlette
+[Yann Collet]: https://github.com/cyan4973
+[official LZ4 project]: https://github.com/lz4/lz4
